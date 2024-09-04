@@ -1,9 +1,11 @@
+import '../../key.dart';
+
 class ApiFootballEndpoints {
-  static const String baseUrl = 'https://api-football-v1.p.rapidapi.com/v3/';
+  static const String baseUrl = 'https://v3.football.api-sports.io/';
 
   // Headers for API key and host
-  static Map<String, String> headers(String apiKey) => {
-        'X-RapidAPI-Key': apiKey,
+  static Map<String, String> headers() => {
+        'X-RapidAPI-Key': Config.apiFootballApiKey,
         'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com',
       };
 
