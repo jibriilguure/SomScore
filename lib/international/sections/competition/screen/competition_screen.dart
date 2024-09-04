@@ -1,4 +1,3 @@
-// competition_screen.dart
 import 'package:flutter/material.dart';
 import '../model/competition_model.dart';
 import '../services/competition_service.dart';
@@ -17,7 +16,7 @@ class CompetitionScreen extends StatelessWidget {
       ),
       body: FutureBuilder<List<Competition>>(
         future: competitionService.fetchCompetitions(
-            nDays: 1), // Fetch data valid for 1 day
+            nDays: 1), // Fetch data valid for 1 days
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

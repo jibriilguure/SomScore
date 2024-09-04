@@ -11,7 +11,7 @@ class Competition extends HiveObject {
   final String name;
 
   @HiveField(2)
-  final String type; // This will differentiate between League and Cup
+  final String type; // League or Cup
 
   @HiveField(3)
   final String logoUrl;
@@ -84,9 +84,10 @@ class Competition extends HiveObject {
     required this.odds,
   });
 
-  // Initialize fields
+  // Initialize fields from API response (assumes data has seasons coverage)
   factory Competition.fromJson(Map<String, dynamic> json) {
-    final coverage = json['seasons'].last['coverage'];
+    // Get the most recent season to extract coverage info
+    final recentSeason = json['seasons'].last['coverage'];
 
     return Competition(
       id: json['league']['id'],
@@ -95,23 +96,23 @@ class Competition extends HiveObject {
       logoUrl: json['league']['logo'],
       countryName: json['country']['name'],
       countryCode: json['country']['code'],
-      fetchDate: DateTime.now(),
-      events: coverage['fixtures']['events'],
-      lineups: coverage['fixtures']['lineups'],
-      statisticsFixtures: coverage['fixtures']['statistics_fixtures'],
-      statisticsPlayers: coverage['fixtures']['statistics_players'],
-      standings: coverage['standings'],
-      players: coverage['players'],
-      topScorers: coverage['top_scorers'],
-      topAssists: coverage['top_assists'],
-      topCards: coverage['top_cards'],
-      injuries: coverage['injuries'],
-      predictions: coverage['predictions'],
-      odds: coverage['odds'],
+      fetchDate: DateTime.now(), // Assign current fetch time
+      events: recentSeason['fixtures']['events'],
+      lineups: recentSeason['fixtures']['lineups'],
+      statisticsFixtures: recentSeason['fixtures']['statistics_fixtures'],
+      statisticsPlayers: recentSeason['fixtures']['statistics_players'],
+      standings: recentSeason['standings'],
+      players: recentSeason['players'],
+      topScorers: recentSeason['top_scorers'],
+      topAssists: recentSeason['top_assists'],
+      topCards: recentSeason['top_cards'],
+      injuries: recentSeason['injuries'],
+      predictions: recentSeason['predictions'],
+      odds: recentSeason['odds'],
     );
   }
 
-  // Parse JSON
+  // Parse JSON from Hive format (stored in Hive with the custom adapter)
   factory Competition.fromHive(Map<String, dynamic> hiveData) {
     return Competition(
       id: hiveData['id'],
@@ -134,5 +135,30 @@ class Competition extends HiveObject {
       predictions: hiveData['predictions'],
       odds: hiveData['odds'],
     );
+  }
+
+  // Convert Competition instance to a format that Hive can store
+  Map<String, dynamic> toHive() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+      'logoUrl': logoUrl,
+      'countryName': countryName,
+      'countryCode': countryCode,
+      'fetchDate': fetchDate.toIso8601String(),
+      'events': events,
+      'lineups': lineups,
+      'statisticsFixtures': statisticsFixtures,
+      'statisticsPlayers': statisticsPlayers,
+      'standings': standings,
+      'players': players,
+      'topScorers': topScorers,
+      'topAssists': topAssists,
+      'topCards': topCards,
+      'injuries': injuries,
+      'predictions': predictions,
+      'odds': odds,
+    };
   }
 }

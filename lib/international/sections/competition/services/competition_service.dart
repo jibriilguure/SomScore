@@ -12,6 +12,22 @@ class CompetitionService {
   // Desired league IDs to filter
   static const List<int> desiredLeagueIds = [39, 2, 15, 846];
 
+  // Helper method to store the last fetch time
+  Future<void> _storeLastFetchTime(Box box) async {
+    await box.put('lastFetchTime', DateTime.now().toIso8601String());
+  }
+
+  // Method to check if cache is expired based on nDays
+  bool _isCacheExpired(Box box, int nDays) {
+    final lastFetchTime = box.get('lastFetchTime');
+    if (lastFetchTime == null)
+      return true; // Cache is expired if no last fetch time is found
+
+    final lastFetchDateTime = DateTime.parse(lastFetchTime);
+    final currentDate = DateTime.now();
+    return currentDate.difference(lastFetchDateTime).inDays >= nDays;
+  }
+
   Future<List<Competition>> fetchCompetitions({required int nDays}) async {
     // Open Hive box
     var box = await Hive.openBox<Competition>('competitions');
@@ -72,6 +88,9 @@ class CompetitionService {
           await box.add(Competition.fromHive(competitionToSave));
         }
 
+        // Store the last fetch time
+        await _storeLastFetchTime(box);
+
         return competitions;
       } else {
         throw Exception('Failed to load competitions');
@@ -113,8 +132,21 @@ class CompetitionService {
     }
   }
 
-  // Method to fetch competition data including seasons based on leagueId
-  Future<Map<String, dynamic>> fetchCompetitionWithSeasons(int leagueId) async {
+  // Method to fetch competition data including seasons based on leagueId with caching logic
+  Future<Map<String, dynamic>> fetchCompetitionWithSeasons(int leagueId,
+      {required int nDays}) async {
+    var box = await Hive.openBox('competition_seasons_$leagueId');
+
+    // Get data from Hive, if available and within nDays
+    if (!_isCacheExpired(box, nDays)) {
+      final Map<String, dynamic>? cachedData =
+          box.get('competitionWithSeasons');
+      if (cachedData != null) {
+        return cachedData;
+      }
+    }
+
+    // Otherwise, fetch new data from API
     final response = await http.get(
       Uri.parse('$apiUrl?id=$leagueId'),
       headers: {
@@ -133,13 +165,18 @@ class CompetitionService {
           .firstWhere((season) => season['current'] == true)['year']
           .toString();
 
-      return {
-        'competition': Competition.fromJson(data), // Competition info
-        'seasons': seasons
-            .map((s) => s['year'].toString())
-            .toList(), // Available seasons
-        'currentSeason': currentSeason, // The season marked as current
+      final competitionData = {
+        'competition': Competition.fromJson(data),
+        'seasons': seasons.map((s) => s['year'].toString()).toList(),
+        'currentSeason': currentSeason,
       };
+
+      // Cache the fetched competition data with seasons
+      await box.put('competitionWithSeasons', competitionData);
+      // Store the last fetch time
+      await _storeLastFetchTime(box);
+
+      return competitionData;
     } else {
       throw Exception('Failed to load data for the competition.');
     }

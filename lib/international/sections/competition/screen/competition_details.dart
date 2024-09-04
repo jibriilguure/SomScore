@@ -12,19 +12,17 @@ class CompetitionDetailScreen extends StatefulWidget {
 }
 
 class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
-  String selectedSeason =
-      '2023'; // Default value before fetching the current season
   late Future<Map<String, dynamic>> futureCompetitionData;
   List<String> seasons = [];
-
+  String? selectedSeason; // No default value, will be set dynamically
   final competitionService = CompetitionService();
 
   @override
   void initState() {
     super.initState();
-    // Fetch competition data and seasons
-    futureCompetitionData =
-        competitionService.fetchCompetitionWithSeasons(widget.competition.id);
+    // Fetch competition data and seasons from cache or API, with caching for 1 day
+    futureCompetitionData = competitionService
+        .fetchCompetitionWithSeasons(widget.competition.id, nDays: 1);
   }
 
   @override
@@ -46,11 +44,13 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.white));
+                    style: const TextStyle(color: Colors.red));
               } else if (snapshot.hasData) {
                 final competitionData = snapshot.data!;
                 seasons = competitionData['seasons'];
-                selectedSeason = competitionData['currentSeason'];
+
+                // Automatically set the selected season to the current season
+                selectedSeason ??= competitionData['currentSeason'];
 
                 return _buildAppBarTitle();
               } else {
@@ -82,8 +82,7 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
           ),
         ),
         body: FutureBuilder<Map<String, dynamic>>(
-          future:
-              futureCompetitionData, // Use the future that fetches competition data for the season
+          future: futureCompetitionData,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -132,10 +131,9 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
                 setState(() {
                   selectedSeason = newValue!;
                   // Fetch data for the new season
-                  futureCompetitionData =
-                      competitionService.fetchCompetitionBySeason(
-                              widget.competition.id, selectedSeason)
-                          as Future<Map<String, dynamic>>;
+                  futureCompetitionData = competitionService
+                      .fetchCompetitionWithSeasons(widget.competition.id,
+                          nDays: 1);
                 });
               },
               items: seasons.map<DropdownMenuItem<String>>((String season) {
