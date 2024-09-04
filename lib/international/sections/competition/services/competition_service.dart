@@ -88,4 +88,60 @@ class CompetitionService {
       return difference <= nDays;
     }).toList();
   }
+
+  // Method to fetch specific competition data based on leagueId and season
+  Future<Competition> fetchCompetitionBySeason(
+      int leagueId, String season) async {
+    final response = await http.get(
+      Uri.parse('$apiUrl?id=$leagueId&season=$season'),
+      headers: {
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': 'v3.football.api-sports.io',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body)['response'];
+      if (data.isNotEmpty) {
+        return Competition.fromJson(
+            data[0]); // Return the first result for the selected season
+      } else {
+        throw Exception('No data found for the selected season.');
+      }
+    } else {
+      throw Exception('Failed to load data for the season.');
+    }
+  }
+
+  // Method to fetch competition data including seasons based on leagueId
+  Future<Map<String, dynamic>> fetchCompetitionWithSeasons(int leagueId) async {
+    final response = await http.get(
+      Uri.parse('$apiUrl?id=$leagueId'),
+      headers: {
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': 'v3.football.api-sports.io',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data =
+          json.decode(response.body)['response'][0];
+      List<dynamic> seasons = data['seasons'];
+
+      // Extract seasons list and identify the current season
+      String currentSeason = seasons
+          .firstWhere((season) => season['current'] == true)['year']
+          .toString();
+
+      return {
+        'competition': Competition.fromJson(data), // Competition info
+        'seasons': seasons
+            .map((s) => s['year'].toString())
+            .toList(), // Available seasons
+        'currentSeason': currentSeason, // The season marked as current
+      };
+    } else {
+      throw Exception('Failed to load data for the competition.');
+    }
+  }
 }

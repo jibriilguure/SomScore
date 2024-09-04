@@ -1,5 +1,6 @@
+// competition_tile.dart
 import 'package:flutter/material.dart';
-
+import 'package:somscore/international/sections/competition/screen/competition_details.dart';
 import '../model/competition_model.dart';
 
 class CompetitionTile extends StatelessWidget {
@@ -9,34 +10,23 @@ class CompetitionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(competition.logoUrl),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    competition.countryName,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  Text(
-                    competition.name,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Divider(color: Colors.grey[800]),
-        ],
+    return ListTile(
+      leading: Image.network(
+        competition.logoUrl,
+        width: 50,
+        height: 50,
+        errorBuilder: (context, error, stackTrace) => Icon(Icons.sports),
       ),
+      title: Text(competition.name),
+      subtitle: Text(competition.countryName),
+      trailing: Icon(Icons.arrow_forward),
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (ctx) =>
+                    CompetitionDetailScreen(competition: competition)));
+      },
     );
   }
 }

@@ -1,3 +1,4 @@
+// competition_screen.dart
 import 'package:flutter/material.dart';
 import '../model/competition_model.dart';
 import '../services/competition_service.dart';
@@ -5,6 +6,8 @@ import '../widgets/competition_tile.dart';
 
 class CompetitionScreen extends StatelessWidget {
   final CompetitionService competitionService = CompetitionService();
+
+  CompetitionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +17,7 @@ class CompetitionScreen extends StatelessWidget {
       ),
       body: FutureBuilder<List<Competition>>(
         future: competitionService.fetchCompetitions(
-            nDays: 1), // Fetch data valid for 1 days
+            nDays: 1), // Fetch data valid for 1 day
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -28,12 +31,6 @@ class CompetitionScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final competition = snapshot.data![index];
                 return CompetitionTile(competition: competition);
-                // ListTile(
-                //   leading: Image.network(competition.logoUrl ?? ''),
-                //   title: Text(competition.name),
-                //   subtitle: Text(
-                //       '${competition.countryName} (${competition.countryCode})'),
-                // );
               },
             );
           }
