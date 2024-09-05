@@ -4,7 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'home/bottom_nav.dart';
 import 'international/sections/competition/model/competition_model.dart';
-import 'international/sections/competition/screen/competition_details.dart';
+
 import 'international/sections/competition/screen/competition_screen.dart';
 
 void main() async {

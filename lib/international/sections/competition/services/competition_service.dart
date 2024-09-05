@@ -139,10 +139,12 @@ class CompetitionService {
 
     // Get data from Hive, if available and within nDays
     if (!_isCacheExpired(box, nDays)) {
-      final Map<String, dynamic>? cachedData =
-          box.get('competitionWithSeasons');
+      final cachedData =
+          box.get('competitionWithSeasons') as Map<dynamic, dynamic>?;
+
+      // Cast it to the correct type Map<String, dynamic>
       if (cachedData != null) {
-        return cachedData;
+        return Map<String, dynamic>.from(cachedData);
       }
     }
 
