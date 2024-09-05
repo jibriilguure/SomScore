@@ -17,6 +17,8 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
   String? selectedSeason; // No default value, will be set dynamically
   final competitionService = CompetitionService();
 
+  int _tabCount = 1; // Default tab count is at least 1 (for fixtures)
+
   @override
   void initState() {
     super.initState();
@@ -27,86 +29,108 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3, // Fixtures, Standings, Top Scorers
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: FutureBuilder<Map<String, dynamic>>(
-            future: futureCompetitionData,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red));
-              } else if (snapshot.hasData) {
-                final competitionData = snapshot.data!;
-                seasons = competitionData['seasons'];
-
-                // Automatically set the selected season to the current season
-                selectedSeason ??= competitionData['currentSeason'];
-
-                return _buildAppBarTitle();
-              } else {
-                return const Text('No data',
-                    style: TextStyle(color: Colors.white));
-              }
-            },
-          ),
-          centerTitle: true, // Ensure the title is centered
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.share, color: Colors.white),
-              onPressed: () {},
+    return FutureBuilder<Map<String, dynamic>>(
+      future: futureCompetitionData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
-            IconButton(
-              icon: const Icon(Icons.star_border, color: Colors.white),
-              onPressed: () {},
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red)),
             ),
-          ],
-          bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Colors.red,
-            tabs: [
-              Tab(text: "Fixtures"),
-              Tab(text: "Standings"),
-              Tab(text: "Top Scorers"),
-            ],
-          ),
-        ),
-        body: FutureBuilder<Map<String, dynamic>>(
-          future: futureCompetitionData,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(
-                  child: Text('Error: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.white)));
-            } else if (snapshot.hasData) {
-              return TabBarView(
-                children: [
-                  _buildFixturesTab(),
-                  _buildStandingsTab(),
-                  _buildTopScorersTab(),
+          );
+        } else if (snapshot.hasData) {
+          final competitionData = snapshot.data!;
+          seasons = competitionData['seasons'];
+
+          final currentCompetition =
+              competitionData['competition'] as Competition;
+
+          // Automatically set the selected season to the current season
+          selectedSeason ??= competitionData['currentSeason'];
+
+          // Determine how many tabs are true (fixtures, standings, top_scorers)
+          _tabCount = 1; // We always have Fixtures
+          if (currentCompetition.standings) _tabCount++;
+          if (currentCompetition.topScorers) _tabCount++;
+
+          return DefaultTabController(
+            length: _tabCount, // Dynamically set the tab length
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: _buildAppBarTitle(),
+                centerTitle: true, // Ensure the title is centered
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.star_border, color: Colors.white),
+                    onPressed: () {},
+                  ),
                 ],
-              );
-            } else {
-              return const Center(
-                  child: Text('No data found',
-                      style: TextStyle(color: Colors.white)));
-            }
-          },
-        ),
-      ),
+                bottom: TabBar(
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.red,
+                  tabs: _buildTabs(currentCompetition),
+                ),
+              ),
+              body: TabBarView(
+                children: _buildTabViews(currentCompetition),
+              ),
+            ),
+          );
+        } else {
+          return const Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child:
+                  Text('No data found', style: TextStyle(color: Colors.white)),
+            ),
+          );
+        }
+      },
     );
+  }
+
+  // Build the tabs based on the available data (fixtures, standings, top_scorers)
+  List<Tab> _buildTabs(Competition competition) {
+    List<Tab> tabs = [const Tab(text: "Fixtures")]; // Fixtures is always there
+    if (competition.standings) {
+      tabs.add(const Tab(text: "Standings"));
+    }
+    if (competition.topScorers) {
+      tabs.add(const Tab(text: "Top Scorers"));
+    }
+    return tabs;
+  }
+
+  // Build the TabViews based on the available data (fixtures, standings, top_scorers)
+  List<Widget> _buildTabViews(Competition competition) {
+    List<Widget> tabViews = [_buildFixturesTab()]; // Fixtures is always there
+    if (competition.standings) {
+      tabViews.add(_buildStandingsTab());
+    }
+    if (competition.topScorers) {
+      tabViews.add(_buildTopScorersTab());
+    }
+    return tabViews;
   }
 
   Widget _buildAppBarTitle() {
@@ -162,53 +186,20 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
   }
 
   Widget _buildFixturesTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 4,
-      itemBuilder: (context, index) {
-        return _buildMatchItem(
-            "Home Team $index", "Away Team $index", "2", "1", false, "FT 15/4");
-      },
-    );
-  }
-
-  Widget _buildMatchItem(String homeTeam, String awayTeam, String homeScore,
-      String awayScore, bool isLive, String status) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Text(status,
-                  style: TextStyle(color: isLive ? Colors.green : Colors.grey)),
-              const SizedBox(width: 8),
-              Text(homeTeam, style: const TextStyle(color: Colors.white)),
-            ],
-          ),
-          Text("$homeScore - $awayScore",
-              style: const TextStyle(color: Colors.white, fontSize: 16)),
-          Text(awayTeam, style: const TextStyle(color: Colors.white)),
-        ],
-      ),
+    return const Center(
+      child: Text('Fixtures Data', style: TextStyle(color: Colors.white)),
     );
   }
 
   Widget _buildStandingsTab() {
     return const Center(
-      child: Text('Standings', style: TextStyle(color: Colors.white)),
+      child: Text('Standings Data', style: TextStyle(color: Colors.white)),
     );
   }
 
   Widget _buildTopScorersTab() {
     return const Center(
-      child: Text('Top Scorers', style: TextStyle(color: Colors.white)),
+      child: Text('Top Scorers Data', style: TextStyle(color: Colors.white)),
     );
   }
 }
