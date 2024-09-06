@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:somscore/international/api/endpoints.dart';
 import 'package:somscore/key.dart';
 
 import 'model/top_scorer_model.dart'; // Import the player model
 
 class TopScorersService {
-  static const String apiUrl =
-      'https://v3.football.api-sports.io/players/topscorers';
+  static const String apiUrl = ApiFootballEndpoints.getTopScorers;
   static const String apiKey = Config.apiFootballApiKey;
 
   // Fetch top scorers for a given league and season
