@@ -12,12 +12,13 @@ class TopScorersService {
 
   // Fetch top scorers for a given league and season
   Future<List<Player>> fetchTopScorers(int leagueId, String season) async {
-    var playerBox = await Hive.openBox<Player>('topScorers');
-    var metadataBox =
-        await Hive.openBox('metadata'); // Separate box for metadata
+    // Open a unique Hive box for each league by appending the leagueId to the box name
+    var playerBox = await Hive.openBox<Player>('topScorers_$leagueId');
+    var metadataBox = await Hive.openBox(
+        'metadata_$leagueId'); // Separate metadata box per league
 
     // Check if the cache is valid or needs updating
-    if (!_isCacheValid(metadataBox, leagueId, season)) {
+    if (!_isCacheValid(metadataBox, season)) {
       final response = await http.get(
         Uri.parse('$apiUrl?league=$leagueId&season=$season'),
         headers: {
@@ -30,16 +31,15 @@ class TopScorersService {
         final List<Player> players =
             data.map((json) => Player.fromJson(json)).toList();
 
-        // Clear previous data in Hive and store the new data
+        // Clear previous data in the specific league box and store the new data
         await playerBox.clear();
         for (var player in players) {
           await playerBox.add(player);
         }
 
-        // Update the cache metadata with the new fetch time and store league/season for validation
+        // Update the cache metadata with the new fetch time and store the season for validation
         await metadataBox.put(
             'lastFetchTime', DateTime.now().toIso8601String());
-        await metadataBox.put('lastFetchLeague', leagueId);
         await metadataBox.put('lastFetchSeason', season);
 
         return players;
@@ -47,21 +47,18 @@ class TopScorersService {
         throw Exception('Failed to fetch top scorers');
       }
     } else {
-      // Return cached data from Hive
+      // Return cached data from the specific league's Hive box
       return playerBox.values.toList();
     }
   }
 
-  // Validate if the cache is still valid
-  bool _isCacheValid(Box metadataBox, int leagueId, String season) {
+  // Validate if the cache is still valid for the league's metadata
+  bool _isCacheValid(Box metadataBox, String season) {
     final lastFetchTime = metadataBox.get('lastFetchTime');
-    final lastFetchLeague = metadataBox.get('lastFetchLeague');
     final lastFetchSeason = metadataBox.get('lastFetchSeason');
 
-    // Cache is invalid if there is no record or the league/season has changed
-    if (lastFetchTime == null ||
-        lastFetchLeague != leagueId ||
-        lastFetchSeason != season) {
+    // Cache is invalid if there is no record or the season has changed
+    if (lastFetchTime == null || lastFetchSeason != season) {
       return false;
     }
 
