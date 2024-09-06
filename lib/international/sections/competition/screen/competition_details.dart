@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'sub-screens/top_scorers.dart';
+
 import '../model/competition_model.dart';
 import '../services/competition_service.dart';
 
@@ -128,7 +130,10 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
       tabViews.add(_buildStandingsTab());
     }
     if (competition.topScorers) {
-      tabViews.add(_buildTopScorersTab());
+      tabViews.add(TopScorersScreen(
+        leagueId: competition.id,
+        season: selectedSeason!,
+      ));
     }
     return tabViews;
   }
@@ -194,12 +199,6 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
   Widget _buildStandingsTab() {
     return const Center(
       child: Text('Standings Data', style: TextStyle(color: Colors.white)),
-    );
-  }
-
-  Widget _buildTopScorersTab() {
-    return const Center(
-      child: Text('Top Scorers Data', style: TextStyle(color: Colors.white)),
     );
   }
 }
