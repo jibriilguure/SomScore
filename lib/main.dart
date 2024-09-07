@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:somscore/international/sections/competition/screen/stainding/cup_standing_model.dart';
+import 'package:somscore/international/sections/competition/screen/stainding/league_standing_model.dart';
 
 import 'home/bottom_nav.dart';
 import 'international/sections/competition/model/competition_model.dart';
@@ -18,6 +20,8 @@ void main() async {
   Hive.registerAdapter(PlayerAdapter());
   Hive.registerAdapter(TeamAdapter());
   Hive.registerAdapter(FixtureAdapter());
+  Hive.registerAdapter(LeagueStandingAdapter());
+  Hive.registerAdapter(CupStandingAdapter());
 
   runApp(MyApp());
 }

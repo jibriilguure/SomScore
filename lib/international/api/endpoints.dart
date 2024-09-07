@@ -13,5 +13,8 @@ class ApiFootballEndpoints {
   static const String getLeagues = '${baseUrl}leagues';
 
   static const String getTopScorers = '${baseUrl}players/topscorers';
+
   static const String getFixtures = '${baseUrl}fixtures';
+
+  static const String getStanding = '${baseUrl}standings';
 }
