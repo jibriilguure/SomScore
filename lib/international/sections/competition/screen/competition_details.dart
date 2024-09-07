@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'fixture_screen/FixturesScreen.dart';
 
+import 'stainding/cup_standing_screen.dart';
 import 'stainding/standing_screen.dart';
 import 'sub-screens/top_scorers.dart';
 
@@ -134,21 +135,36 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
           season:
               selectedSeason!), // Pass leagueId and season to FixturesScreen
     ]; // Fixtures is always there
+
     if (competition.standings) {
-      tabViews.add(
-        StandingsScreen(
-          leagueId: competition.id,
-          season:
-              selectedSeason!, // Pass leagueId and season to StandingsScreen
-        ),
-      );
+      if (competition.type == "Cup") {
+        // Show cup standings if it's a cup competition
+        tabViews.add(
+          CupStandingsScreen(
+            leagueId: competition.id,
+            season:
+                selectedSeason!, // Pass leagueId and season to CupStandingsScreen
+          ),
+        );
+      } else {
+        // Show league standings if it's a league competition
+        tabViews.add(
+          StandingsScreen(
+            leagueId: competition.id,
+            season:
+                selectedSeason!, // Pass leagueId and season to StandingsScreen
+          ),
+        );
+      }
     }
+
     if (competition.topScorers) {
       tabViews.add(TopScorersScreen(
         leagueId: competition.id,
         season: selectedSeason!,
       ));
     }
+
     return tabViews;
   }
 

@@ -70,17 +70,26 @@ class StandingService {
     }
   }
 
-  Future<List<CupStanding>> fetchCupStandings(
+  Future<Map<String, List<CupStanding>>> fetchCupStandings(
       int leagueId, String season) async {
-    var cupBox =
-        await Hive.openBox<CupStanding>('cupStandings_$leagueId$season');
+    final cupBox =
+        await Hive.openBox<CupStanding>('cupStandings_${leagueId}_$season');
     var metadataBox =
         await Hive.openBox('metadata'); // Store metadata like fetch time
 
     // Check if data is cached and the cache is valid
     if (cupBox.isNotEmpty && _isCacheValid(metadataBox, leagueId, season)) {
       // Return cached data
-      return cupBox.values.toList();
+      Map<String, List<CupStanding>> cachedStandingsByGroup = {};
+
+      for (var standing in cupBox.values) {
+        if (!cachedStandingsByGroup.containsKey(standing.group)) {
+          cachedStandingsByGroup[standing.group] = [];
+        }
+        cachedStandingsByGroup[standing.group]!.add(standing);
+      }
+
+      return cachedStandingsByGroup;
     }
 
     // If cache is invalid, fetch from API
@@ -92,23 +101,35 @@ class StandingService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['response'];
-      final List<CupStanding> standings =
-          data.map((json) => CupStanding.fromJson(json)).toList();
+      final data = json.decode(response.body)['response'][0]['league']
+          ['standings'] as List;
+      final Map<String, List<CupStanding>> standingsByGroup = {};
+
+      for (var groupStandings in data) {
+        for (var standingJson in groupStandings) {
+          final standing = CupStanding.fromJson(standingJson);
+          if (!standingsByGroup.containsKey(standing.group)) {
+            standingsByGroup[standing.group] = [];
+          }
+          standingsByGroup[standing.group]!.add(standing);
+        }
+      }
 
       // Clear previous data and store the new data in the Hive box
       await cupBox.clear();
-      for (var standing in standings) {
-        await cupBox.add(standing);
+      for (var group in standingsByGroup.keys) {
+        for (var standing in standingsByGroup[group]!) {
+          await cupBox.add(standing); // Save each standing in the box
+        }
       }
 
       // Store the time of the fetch in metadata to track cache validity
       await metadataBox.put('lastFetchTime_${leagueId}_$season',
           DateTime.now().toIso8601String());
 
-      return standings;
+      return standingsByGroup;
     } else {
-      throw Exception('Failed to fetch cup standings');
+      throw Exception('Failed to fetch standings');
     }
   }
 }
