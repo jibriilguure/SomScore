@@ -10,7 +10,7 @@ class CompetitionService {
   static const String apiKey = Config.apiFootballApiKey;
 
   // Desired league IDs to filter
-  static const List<int> desiredLeagueIds = [39, 2, 15, 846];
+  static const List<int> desiredLeagueIds = [39, 2, 1, 846];
 
   // Helper method to store the last fetch time
   Future<void> _storeLastFetchTime(Box box) async {

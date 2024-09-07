@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:somscore/international/api/endpoints.dart';
 
 import '../../../../../key.dart';
 import 'fixture_model.dart';
 
 class FixtureService {
-  static const String apiUrl = 'https://v3.football.api-sports.io/fixtures';
+  static const String apiUrl = ApiFootballEndpoints.getFixtures;
   static const String apiKey = Config.apiFootballApiKey;
 
   // Fetch fixtures for a given league and season
