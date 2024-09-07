@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'fixture_screen/FixturesScreen.dart';
 import 'sub-screens/top_scorers.dart';
 
 import '../model/competition_model.dart';
@@ -125,7 +126,12 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
 
   // Build the TabViews based on the available data (fixtures, standings, top_scorers)
   List<Widget> _buildTabViews(Competition competition) {
-    List<Widget> tabViews = [_buildFixturesTab()]; // Fixtures is always there
+    List<Widget> tabViews = [
+      FixturesScreen(
+          leagueId: competition.id,
+          season:
+              selectedSeason!), // Pass leagueId and season to FixturesScreen
+    ]; // Fixtures is always there
     if (competition.standings) {
       tabViews.add(_buildStandingsTab());
     }
@@ -187,12 +193,6 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
       ],
-    );
-  }
-
-  Widget _buildFixturesTab() {
-    return const Center(
-      child: Text('Fixtures Data', style: TextStyle(color: Colors.white)),
     );
   }
 
