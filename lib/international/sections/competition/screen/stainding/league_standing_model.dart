@@ -45,15 +45,15 @@ class LeagueStanding {
 
   factory LeagueStanding.fromJson(Map<String, dynamic> json) {
     return LeagueStanding(
-      rank: json['rank'],
-      teamName: json['team']['name'],
-      teamLogo: json['team']['logo'],
-      played: json['all']['played'],
-      win: json['all']['win'],
-      draw: json['all']['draw'],
-      loss: json['all']['lose'],
-      goalDifference: json['goalsDiff'],
-      points: json['points'],
+      rank: json['rank'] ?? 0,
+      teamName: json['team']['name'] ?? 'Unknown',
+      teamLogo: json['team']['logo'] ?? '',
+      played: json['all']['played'] ?? 0,
+      win: json['all']['win'] ?? 0,
+      draw: json['all']['draw'] ?? 0,
+      loss: json['all']['lose'] ?? 0,
+      goalDifference: json['goalsDiff'] ?? 0,
+      points: json['points'] ?? 0,
     );
   }
 }

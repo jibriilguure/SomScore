@@ -49,16 +49,17 @@ class CupStanding {
 
   factory CupStanding.fromJson(Map<String, dynamic> json) {
     return CupStanding(
-      rank: json['rank'],
-      teamName: json['team']['name'],
-      teamLogo: json['team']['logo'],
-      played: json['all']['played'],
-      win: json['all']['win'],
-      draw: json['all']['draw'],
-      loss: json['all']['lose'],
-      goalDifference: json['goalsDiff'],
-      points: json['points'],
-      group: json['group'], // This is important for cup standings
+      rank: json['rank'] ?? 0, // Ensure rank is not null
+      teamName: json['team']['name'] ??
+          'Unknown', // Provide default values for missing names
+      teamLogo: json['team']['logo'] ?? '', // Handle missing logos
+      played: json['all']['played'] ?? 0,
+      win: json['all']['win'] ?? 0,
+      draw: json['all']['draw'] ?? 0,
+      loss: json['all']['lose'] ?? 0,
+      goalDifference: json['goalsDiff'] ?? 0,
+      points: json['points'] ?? 0, // Handle missing points
+      group: json['group'] ?? 'Unknown', // Provide default for missing group
     );
   }
 }
