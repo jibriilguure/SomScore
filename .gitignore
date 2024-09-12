@@ -45,3 +45,4 @@ app.*.map.json
 
 #custom
 lib/key.dart
+config.env

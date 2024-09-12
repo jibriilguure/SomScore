@@ -74,10 +74,7 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen> {
               backgroundColor: Colors.black,
               appBar: AppBar(
                 backgroundColor: Colors.black,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
+
                 title: _buildAppBarTitle(),
                 centerTitle: true, // Ensure the title is centered
                 actions: [

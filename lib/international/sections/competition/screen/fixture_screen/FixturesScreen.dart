@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Import the intl package
 
+import '../matchdetails/match_detail_screen.dart';
 import 'fixture_model.dart';
 import 'fixture_service.dart';
 
@@ -36,8 +37,8 @@ class _FixturesScreenState extends State<FixturesScreen> {
 
     for (var fixture in fixtures) {
       // Format the fixture date
-      String formattedDate =
-          DateFormat('EEEE, dd MMMM yyyy').format(DateTime.parse(fixture.date));
+      String formattedDate = DateFormat('EEEE, dd MMMM yyyy')
+          .format(DateTime.parse(fixture.date!));
 
       if (groupedFixtures.containsKey(formattedDate)) {
         groupedFixtures[formattedDate]!.add(fixture);
@@ -86,14 +87,28 @@ class _FixturesScreenState extends State<FixturesScreen> {
                       ),
                       Column(
                         children: groupedFixtures[date]!
-                            .map((fixture) => FixtureCard(
-                                  date: fixture.date,
-                                  homeTeam: fixture.homeTeam,
-                                  awayTeam: fixture.awayTeam,
-                                  homeTeamLogo: fixture.homeTeamLogo,
-                                  awayTeamLogo: fixture.awayTeamLogo,
-                                  homeScore: fixture.homeScore,
-                                  awayScore: fixture.awayScore,
+                            .map((fixture) => GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (ctx) => MatchDetailScreen(
+                                                  fixtureId: fixture.fixtureId,
+                                                  status: 'FT',
+                                                  // name: fixture.,
+                                                )));
+                                  },
+                                  child: FixtureCard(
+                                    date: fixture.date,
+                                    homeTeam: fixture.homeTeam!,
+                                    // fixture.fixtureId.toString(),
+                                    // //TODO: CHANGE THIS LINE TO  'homeTeam' TO SEE THE HOME TEAM NAME ,
+                                    awayTeam: fixture.awayTeam,
+                                    homeTeamLogo: fixture.homeTeamLogo,
+                                    awayTeamLogo: fixture.awayTeamLogo,
+                                    homeScore: fixture.homeScore,
+                                    awayScore: fixture.awayScore,
+                                  ),
                                 ))
                             .toList(),
                       )
