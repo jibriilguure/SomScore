@@ -5,7 +5,7 @@ part 'fixture_model.g.dart'; // Necessary for Hive
 @HiveType(typeId: 7)
 class FixtureMatchDetail {
   @HiveField(0)
-  final int id;
+  final int? id;
 
   @HiveField(1)
   final String? referee;
@@ -64,7 +64,7 @@ class FixtureMatchDetail {
           ? Venue.fromJson(json['venue'])
           : Venue(id: null, name: null, city: null),
       status: json['status'] != null
-          ? Status.fromJson(json['status'])
+          ? Status.fromJson(json['status']) // This ensures 'status' is not null
           : Status(long: 'Unknown', short: 'N/A', elapsed: null),
       teamsMatch: TeamsMatch.fromJson(json['teams']),
       goals: Goals.fromJson(json['goals']),
@@ -139,9 +139,10 @@ class Status {
 
   factory Status.fromJson(Map<String, dynamic> json) {
     return Status(
-      long: json['long'],
-      short: json['short'],
-      elapsed: json['elapsed'],
+      long: json['long'] ?? 'Unknown', // Ensure long status is not null
+      short: json['short'] ?? 'N/A', // Ensure short status is not null
+      elapsed:
+          json['elapsed'] ?? 0, // Handle elapsed as nullable and default to 0
     );
   }
 }

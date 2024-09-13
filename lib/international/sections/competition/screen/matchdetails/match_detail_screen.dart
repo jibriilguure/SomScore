@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:somscore/international/sections/competition/screen/matchdetails/model/fixture_model.dart';
-import 'match_service.dart'; // Import your service
+import 'model/fixture_model.dart';
+import 'match_service.dart';
 
 class MatchDetailScreen extends StatefulWidget {
-  final int fixtureId; // Fixture ID passed to the screen
-  final String status; // Match status (e.g., FT, Live, etc.)
+  final int fixtureId;
 
   const MatchDetailScreen({
     Key? key,
     required this.fixtureId,
-    required this.status,
   }) : super(key: key);
 
   @override
@@ -20,21 +18,13 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late Future<FixtureMatchDetail?> futureFixture;
-
-  final matchDetailsService = MatchDetailsService(); // Initialize the service
+  final matchDetailsService = MatchDetailsService();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-
-    // Fetch fixture data using the service and fixtureId passed as a parameter
-    futureFixture =
-        matchDetailsService.fetchMatchDetails(widget.fixtureId, widget.status);
-
-    // Debugging information
-    print('Fetching match details for fixtureId: ${widget.fixtureId}');
-    print('Match status: ${widget.status}');
+    futureFixture = matchDetailsService.fetchMatchDetails(widget.fixtureId);
   }
 
   @override
@@ -51,14 +41,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         backgroundColor: Colors.black,
         title: const Column(
           children: [
-            Text(
-              "Premier League",
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              "Today",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+            Text("Premier League", style: TextStyle(color: Colors.white)),
+            Text("Today", style: TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
         centerTitle: true,
@@ -76,13 +60,9 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
       body: FutureBuilder<FixtureMatchDetail?>(
         future: futureFixture,
         builder: (context, snapshot) {
-          print(
-              'Connection state: ${snapshot.connectionState}'); // Debugging connection state
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print('Error occurred: ${snapshot.error}'); // Debugging errors
             return Center(
               child: Text(
                 'Error: ${snapshot.error}',
@@ -90,7 +70,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
               ),
             );
           } else if (!snapshot.hasData) {
-            print('No match data found'); // Debugging when no data found
             return const Center(
               child: Text(
                 'No match data found',
@@ -100,13 +79,12 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
           } else {
             final fixture = snapshot.data;
 
-            // Debugging fetched data
+            // Ensure status is safely handled and displayed
+            final String statusText = fixture?.status.short ?? 'N/A';
+            final String elapsedText =
+                fixture?.status.elapsed?.toString() ?? '';
             print(
-                'Match details fetched: ${fixture?.teamsMatch.home.name} vs ${fixture?.teamsMatch.away.name}');
-            print('Score: ${fixture?.goals.home} - ${fixture?.goals.away}');
-            print('Venue: ${fixture?.venue.name}, ${fixture?.venue.city}');
-            print(
-                'Status: ${fixture?.status.short}, Elapsed time: ${fixture?.status.elapsed}');
+                'Status (parsed): ${fixture?.status.short}, Full Status: ${fixture?.status.long}, Elapsed time: ${fixture?.status.elapsed}');
 
             return Column(
               children: [
@@ -150,14 +128,14 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                             Column(
                               children: [
                                 Text(
-                                  '${fixture?.goals.home} - ${fixture?.goals.away}',
+                                  '${fixture?.goals.home ?? 0} - ${fixture?.goals.away ?? 0}',
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  '${fixture?.status.elapsed ?? ''}\' ${widget.status}',
+                                  '$elapsedText\' $statusText',
                                   style: const TextStyle(
                                       color: Colors.green, fontSize: 14),
                                 ),
@@ -190,7 +168,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                     ),
                   ),
                 ),
-
                 // Tab Bar section
                 TabBar(
                   controller: _tabController,
@@ -203,7 +180,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                     Tab(text: 'Standings'),
                   ],
                 ),
-
                 // Tab Bar View for the selected tab content
                 Expanded(
                   child: TabBarView(
@@ -233,8 +209,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         height: 40,
         errorBuilder:
             (BuildContext context, Object exception, StackTrace? stackTrace) {
-          print(
-              'Error loading logo: $exception'); // Debugging image load errors
+          print('Error loading logo: $exception');
           return Icon(
             fallbackIcon,
             color: Colors.grey,

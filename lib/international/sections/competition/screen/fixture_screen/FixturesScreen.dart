@@ -94,7 +94,7 @@ class _FixturesScreenState extends State<FixturesScreen> {
                                         MaterialPageRoute(
                                             builder: (ctx) => MatchDetailScreen(
                                                   fixtureId: fixture.fixtureId,
-                                                  status: 'FT',
+
                                                   // name: fixture.,
                                                 )));
                                   },

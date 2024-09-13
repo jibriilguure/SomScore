@@ -17,7 +17,7 @@ class FixtureMatchDetailAdapter extends TypeAdapter<FixtureMatchDetail> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return FixtureMatchDetail(
-      id: fields[0] as int,
+      id: fields[0] as int?,
       referee: fields[1] as String?,
       timezone: fields[2] as String,
       date: fields[3] as String,
