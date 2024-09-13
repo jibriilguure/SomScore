@@ -63,9 +63,9 @@ class FixtureMatchDetail {
       venue: json['venue'] != null
           ? Venue.fromJson(json['venue'])
           : Venue(id: null, name: null, city: null),
-      status: json['status'] != null
-          ? Status.fromJson(json['status']) // This ensures 'status' is not null
-          : Status(long: 'Unknown', short: 'N/A', elapsed: null),
+      status:
+          Status.fromJson(json['fixture']['status']), // Correct status parsing
+
       teamsMatch: TeamsMatch.fromJson(json['teams']),
       goals: Goals.fromJson(json['goals']),
       score: Score.fromJson(json['score']),
@@ -139,10 +139,9 @@ class Status {
 
   factory Status.fromJson(Map<String, dynamic> json) {
     return Status(
-      long: json['long'] ?? 'Unknown', // Ensure long status is not null
-      short: json['short'] ?? 'N/A', // Ensure short status is not null
-      elapsed:
-          json['elapsed'] ?? 0, // Handle elapsed as nullable and default to 0
+      long: json['long'] ?? 'Unknown', // Fallback to 'Unknown' if null
+      short: json['short'] ?? 'N/A', // Fallback to 'N/A' if null
+      elapsed: json['elapsed'], // Elapsed can be null
     );
   }
 }

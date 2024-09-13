@@ -41,8 +41,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         backgroundColor: Colors.black,
         title: const Column(
           children: [
-            Text("Premier League", style: TextStyle(color: Colors.white)),
-            Text("Today", style: TextStyle(color: Colors.grey, fontSize: 12)),
+            Text("Match Details ", style: TextStyle(color: Colors.white)),
           ],
         ),
         centerTitle: true,
@@ -83,8 +82,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
             final String statusText = fixture?.status.short ?? 'N/A';
             final String elapsedText =
                 fixture?.status.elapsed?.toString() ?? '';
-            print(
-                'Status (parsed): ${fixture?.status.short}, Full Status: ${fixture?.status.long}, Elapsed time: ${fixture?.status.elapsed}');
 
             return Column(
               children: [
@@ -176,8 +173,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                   tabs: const [
                     Tab(text: 'Summary'),
                     Tab(text: 'Line Up'),
-                    Tab(text: 'H2H'),
                     Tab(text: 'Standings'),
+                    Tab(text: 'H2H'),
                   ],
                 ),
                 // Tab Bar View for the selected tab content
