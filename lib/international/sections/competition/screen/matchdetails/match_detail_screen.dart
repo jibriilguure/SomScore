@@ -1,4 +1,7 @@
+import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // For date formatting and timezone conversion
+import 'package:somscore/international/sections/competition/screen/matchdetails/events/match_event_screen.dart';
 import 'model/fixture_model.dart';
 import 'match_service.dart';
 
@@ -17,20 +20,77 @@ class MatchDetailScreen extends StatefulWidget {
 class _MatchDetailScreenState extends State<MatchDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late Future<FixtureMatchDetail?> futureFixture;
+  FixtureMatchDetail? fixtureData;
   final matchDetailsService = MatchDetailsService();
+  Timer? countdownTimer;
+  Timer? refreshTimer; // Timer to refresh live matches every 15 seconds
+  String countdownText = ''; // This will store the countdown string
+  DateTime? matchDate; // To store the match date
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    futureFixture = matchDetailsService.fetchMatchDetails(widget.fixtureId);
+    _fetchMatchData(); // Initial data fetch
+
+    // Schedule the countdown updates every second
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (matchDate != null) {
+        _updateCountdown();
+      }
+    });
   }
 
   @override
   void dispose() {
+    countdownTimer?.cancel(); // Cancel the timer when the widget is disposed
+    refreshTimer?.cancel(); // Cancel the refresh timer
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Fetch match data and handle periodic fetching for live matches
+  Future<void> _fetchMatchData() async {
+    fixtureData = await matchDetailsService.fetchMatchDetails(widget.fixtureId);
+    if (fixtureData != null &&
+        matchDetailsService.isMatchInProgress(fixtureData!.status.short)) {
+      // If match is live, refresh the data every 15 seconds
+      refreshTimer?.cancel();
+      refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+        _fetchMatchData();
+      });
+    }
+    setState(() {}); // Refresh UI with new data
+  }
+
+  // Function to update the countdown every second
+  void _updateCountdown() {
+    final now = DateTime.now();
+    final duration = matchDate!.difference(now);
+
+    if (duration.isNegative) {
+      countdownText = 'Match started';
+    } else {
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      final seconds = duration.inSeconds % 60;
+      setState(() {
+        countdownText = '${hours.toString().padLeft(2, '0')}:'
+            '${minutes.toString().padLeft(2, '0')}:'
+            '${seconds.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  // Function to format the fixture date
+  String formatFixtureDate(String date) {
+    try {
+      DateTime parsedDate = DateTime.parse(date).toUtc();
+      return DateFormat('h:mm a').format(parsedDate.toLocal());
+    } catch (e) {
+      print('Error parsing date: $e');
+      return 'Invalid Date';
+    }
   }
 
   @override
@@ -41,7 +101,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
         backgroundColor: Colors.black,
         title: const Column(
           children: [
-            Text("Match Details ", style: TextStyle(color: Colors.white)),
+            Text("Match Details", style: TextStyle(color: Colors.white)),
           ],
         ),
         centerTitle: true,
@@ -56,34 +116,9 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
           ),
         ],
       ),
-      body: FutureBuilder<FixtureMatchDetail?>(
-        future: futureFixture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          } else if (!snapshot.hasData) {
-            return const Center(
-              child: Text(
-                'No match data found',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
-          } else {
-            final fixture = snapshot.data;
-
-            // Ensure status is safely handled and displayed
-            final String statusText = fixture?.status.short ?? 'N/A';
-            final String elapsedText =
-                fixture?.status.elapsed?.toString() ?? '';
-
-            return Column(
+      body: fixtureData == null
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
               children: [
                 // Score section
                 Padding(
@@ -105,11 +140,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 _buildTeamLogo(
-                                  fixture?.teamsMatch.home.logo ?? '',
+                                  fixtureData?.teamsMatch.home.logo ?? '',
                                   Icons.shield,
                                 ),
                                 Text(
-                                  fixture?.teamsMatch.home.name ?? '',
+                                  fixtureData?.teamsMatch.home.name ?? '',
                                   style: const TextStyle(color: Colors.white),
                                   textAlign: TextAlign.center,
                                 ),
@@ -121,21 +156,40 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                               ],
                             ),
 
-                            // Middle score and time
+                            // Middle score or countdown
                             Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  '${fixture?.goals.home ?? 0} - ${fixture?.goals.away ?? 0}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold),
+                                Column(
+                                  children: [
+                                    Text(
+                                      fixtureData?.status.short == 'NS'
+                                          ? countdownText // Show countdown
+                                          : '${fixtureData?.goals.home ?? 0} - ${fixtureData?.goals.away ?? 0}', // Show score
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '$elapsedText\' $statusText',
-                                  style: const TextStyle(
-                                      color: Colors.green, fontSize: 14),
-                                ),
+                                if (fixtureData?.status.short != 'NS') ...[
+                                  Column(
+                                    children: [
+                                      Text(
+                                        fixtureData?.status.short ?? '',
+                                        style: const TextStyle(
+                                            color: Colors.green, fontSize: 14),
+                                      ),
+                                      Text(
+                                        '${fixtureData?.status.elapsed?.toString() ?? ''}\'',
+                                        style: const TextStyle(
+                                            color: Colors.green, fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ]
                               ],
                             ),
 
@@ -144,11 +198,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 _buildTeamLogo(
-                                  fixture?.teamsMatch.away.logo ?? '',
+                                  fixtureData?.teamsMatch.away.logo ?? '',
                                   Icons.shield,
                                 ),
                                 Text(
-                                  fixture?.teamsMatch.away.name ?? '',
+                                  fixtureData?.teamsMatch.away.name ?? '',
                                   style: const TextStyle(color: Colors.white),
                                   textAlign: TextAlign.center,
                                 ),
@@ -182,7 +236,10 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildTabContent('Summary'),
+                      MatchEventScreen(
+                        fixtureId: widget.fixtureId,
+                        homeTeam: fixtureData!.teamsMatch.home.id,
+                      ),
                       _buildTabContent('Line Up'),
                       _buildTabContent('H2H'),
                       _buildTabContent('Standings'),
@@ -190,10 +247,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                   ),
                 ),
               ],
-            );
-          }
-        },
-      ),
+            ),
     );
   }
 

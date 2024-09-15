@@ -17,4 +17,6 @@ class ApiFootballEndpoints {
   static const String getFixtures = '${baseUrl}fixtures';
 
   static const String getStanding = '${baseUrl}standings';
+
+  static const String getMatchEvent = '${baseUrl}fixtures/events';
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async'; // For Timer functionality
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:somscore/international/api/endpoints.dart';
@@ -8,6 +9,10 @@ import 'model/fixture_model.dart';
 class MatchDetailsService {
   final String apiUrl = ApiFootballEndpoints.getFixtures;
   final String apiKey = Config.apiFootballApiKey;
+  final int refreshIntervalInSeconds =
+      15; // Set fetch interval for live matches
+
+  Timer? _timer; // To manage periodic fetching
 
   // Function to check if the cached data is still valid based on the status
   bool isCacheValid(Box metadataBox, String matchStatus) {
@@ -48,6 +53,21 @@ class MatchDetailsService {
     return inProgressStatuses.contains(status);
   }
 
+  // Fetch match details periodically for matches in progress
+  void startPeriodicFetching(int matchId) {
+    _timer?.cancel(); // Cancel any existing timer
+
+    _timer = Timer.periodic(Duration(seconds: refreshIntervalInSeconds),
+        (timer) async {
+      await fetchMatchDetails(matchId);
+    });
+  }
+
+  // Stop periodic fetching when the match finishes
+  void stopPeriodicFetching() {
+    _timer?.cancel();
+  }
+
   // Fetch match details from the API or return cached data
   Future<FixtureMatchDetail?> fetchMatchDetails(int matchId) async {
     var matchBox =
@@ -84,14 +104,20 @@ class MatchDetailsService {
       final matchDetails = FixtureMatchDetail.fromJson(matchData);
 
       // Cache the data based on match status
-      if (isMatchFinished(matchDetails.status.short) ||
-          isMatchInProgress(matchDetails.status.short)) {
+      if (isMatchFinished(matchDetails.status.short)) {
         await matchBox.clear(); // Clear old data
         await matchBox.put(0, matchDetails); // Store new data
+        stopPeriodicFetching(); // Stop fetching if match is finished
+      } else if (isMatchInProgress(matchDetails.status.short)) {
+        await matchBox.clear(); // Clear old data
+        await matchBox.put(0, matchDetails); // Store new data
+        startPeriodicFetching(
+            matchId); // Start periodic fetching if match is in progress
       } else {
         // Cache other match statuses for 1 hour
         await matchBox.clear();
         await matchBox.put(0, matchDetails);
+        stopPeriodicFetching(); // Stop periodic fetching if not in progress
       }
 
       // Store the fetch time in metadata

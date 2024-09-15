@@ -55,7 +55,7 @@ class FixtureMatchDetail {
       id: json['id'],
       referee: json['referee'] ?? 'Unknown', // Handle null values
       timezone: json['timezone'] ?? 'UTC',
-      date: json['date'] ?? '',
+      date: json['fixture']['date'] ?? '',
       timestamp: json['timestamp'] ?? 0,
       periods: json['periods'] != null
           ? Periods.fromJson(json['periods'])
