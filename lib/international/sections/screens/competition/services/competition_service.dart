@@ -1,15 +1,15 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:somscore/international/api/endpoints.dart';
 
+import '../../../../../key.dart';
 import '../model/competition_model.dart';
 
 class CompetitionService {
   static const String apiUrl = '${ApiFootballEndpoints.baseUrl}leagues';
-  static final String apiKey =
-      dotenv.env['API_KEY'] ?? ''; // Fetch API key from .env
+  final String apiKey = Config.apiFootballApiKey;
 
   // Desired league IDs to filter
   static const List<int> desiredLeagueIds = [39, 140, 2, 1, 846];

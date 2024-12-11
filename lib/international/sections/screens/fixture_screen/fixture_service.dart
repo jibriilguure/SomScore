@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:somscore/international/api/endpoints.dart';
 
-import '../../../../../key.dart';
+import '../../../../key.dart';
 import 'fixture_model.dart';
 
 class FixtureService {

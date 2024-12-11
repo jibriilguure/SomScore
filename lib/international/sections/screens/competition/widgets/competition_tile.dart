@@ -1,6 +1,6 @@
 // competition_tile.dart
 import 'package:flutter/material.dart';
-import 'package:somscore/international/sections/competition/screen/competition_details.dart';
+import 'package:somscore/international/sections/screens/competition/screen/competition_details.dart';
 import '../model/competition_model.dart';
 
 class CompetitionTile extends StatelessWidget {

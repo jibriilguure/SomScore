@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../international/sections/competition/screen/competition_screen.dart';
+import '../international/sections/screens/competition/screen/competition_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});

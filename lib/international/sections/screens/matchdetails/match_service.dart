@@ -53,6 +53,14 @@ class MatchDetailsService {
     return inProgressStatuses.contains(status);
   }
 
+  // Check if the match start time is within the next 10 minutes
+  bool isMatchStartingSoon(String matchDate) {
+    final now = DateTime.now().toUtc();
+    final matchStartTime = DateTime.parse(matchDate).toUtc();
+    return matchStartTime.isAfter(now) &&
+        matchStartTime.difference(now).inMinutes <= 10;
+  }
+
   // Fetch match details periodically for matches in progress
   void startPeriodicFetching(int matchId) {
     _timer?.cancel(); // Cancel any existing timer
@@ -74,8 +82,9 @@ class MatchDetailsService {
         await Hive.openBox<FixtureMatchDetail>('matchDetails_$matchId');
     var metadataBox = await Hive.openBox('metadata_$matchId');
 
-    // Get current match status from the cache (if available)
+    // Get current match status and date from the cache (if available)
     final matchStatus = matchBox.get(0)?.status.short ?? '';
+    final matchDate = matchBox.get(0)?.date ?? '';
 
     // Check if cached data is available and valid based on match status
     if (matchBox.isNotEmpty && isCacheValid(metadataBox, matchStatus)) {
@@ -108,7 +117,10 @@ class MatchDetailsService {
         await matchBox.clear(); // Clear old data
         await matchBox.put(0, matchDetails); // Store new data
         stopPeriodicFetching(); // Stop fetching if match is finished
-      } else if (isMatchInProgress(matchDetails.status.short)) {
+      } else if (isMatchInProgress(matchDetails.status.short) ||
+          (matchDetails.status.short == 'NS' &&
+              isMatchStartingSoon(matchDetails.date))) {
+        // If the match is starting soon (within 10 minutes), treat it as in progress
         await matchBox.clear(); // Clear old data
         await matchBox.put(0, matchDetails); // Store new data
         startPeriodicFetching(

@@ -8,7 +8,7 @@ part of 'event_model.dart';
 
 class EventAdapter extends TypeAdapter<Event> {
   @override
-  final int typeId = 16;
+  final int typeId = 40;
 
   @override
   Event read(BinaryReader reader) {
@@ -17,36 +17,33 @@ class EventAdapter extends TypeAdapter<Event> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Event(
-      elapsed: fields[0] as int,
-      extra: fields[1] as int?,
-      team: fields[2] as Team,
-      player: fields[3] as Player,
-      assist: fields[4] as Assist?,
-      type: fields[5] as String,
-      detail: fields[6] as String,
-      comments: fields[7] as String?,
+      time: fields[0] as Time,
+      team: fields[1] as EventTeam,
+      player: fields[2] as EventPlayer,
+      assist: fields[3] as Assist?,
+      type: fields[4] as String,
+      detail: fields[5] as String,
+      comments: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Event obj) {
     writer
-      ..writeByte(8)
-      ..writeByte(0)
-      ..write(obj.elapsed)
-      ..writeByte(1)
-      ..write(obj.extra)
-      ..writeByte(2)
-      ..write(obj.team)
-      ..writeByte(3)
-      ..write(obj.player)
-      ..writeByte(4)
-      ..write(obj.assist)
-      ..writeByte(5)
-      ..write(obj.type)
-      ..writeByte(6)
-      ..write(obj.detail)
       ..writeByte(7)
+      ..writeByte(0)
+      ..write(obj.time)
+      ..writeByte(1)
+      ..write(obj.team)
+      ..writeByte(2)
+      ..write(obj.player)
+      ..writeByte(3)
+      ..write(obj.assist)
+      ..writeByte(4)
+      ..write(obj.type)
+      ..writeByte(5)
+      ..write(obj.detail)
+      ..writeByte(6)
       ..write(obj.comments);
   }
 
@@ -61,25 +58,62 @@ class EventAdapter extends TypeAdapter<Event> {
           typeId == other.typeId;
 }
 
-class TeamAdapter extends TypeAdapter<Team> {
+class TimeAdapter extends TypeAdapter<Time> {
   @override
-  final int typeId = 17;
+  final int typeId = 41;
 
   @override
-  Team read(BinaryReader reader) {
+  Time read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Team(
-      id: fields[0] as int,
-      name: fields[1] as String,
-      logo: fields[2] as String,
+    return Time(
+      elapsed: fields[0] as int,
+      extra: fields[1] as int?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Team obj) {
+  void write(BinaryWriter writer, Time obj) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(obj.elapsed)
+      ..writeByte(1)
+      ..write(obj.extra);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TimeAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class EventTeamAdapter extends TypeAdapter<EventTeam> {
+  @override
+  final int typeId = 42;
+
+  @override
+  EventTeam read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return EventTeam(
+      id: fields[0] as int,
+      name: fields[1] as String,
+      logo: fields[2] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, EventTeam obj) {
     writer
       ..writeByte(3)
       ..writeByte(0)
@@ -96,29 +130,29 @@ class TeamAdapter extends TypeAdapter<Team> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TeamAdapter &&
+      other is EventTeamAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
 
-class PlayerAdapter extends TypeAdapter<Player> {
+class EventPlayerAdapter extends TypeAdapter<EventPlayer> {
   @override
-  final int typeId = 18;
+  final int typeId = 43;
 
   @override
-  Player read(BinaryReader reader) {
+  EventPlayer read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Player(
+    return EventPlayer(
       id: fields[0] as int,
       name: fields[1] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Player obj) {
+  void write(BinaryWriter writer, EventPlayer obj) {
     writer
       ..writeByte(2)
       ..writeByte(0)
@@ -133,14 +167,14 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PlayerAdapter &&
+      other is EventPlayerAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
 
 class AssistAdapter extends TypeAdapter<Assist> {
   @override
-  final int typeId = 19;
+  final int typeId = 44;
 
   @override
   Assist read(BinaryReader reader) {

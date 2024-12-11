@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'fixture_screen/FixturesScreen.dart';
+import '../../fixture_screen/FixturesScreen.dart';
 
-import 'stainding/cup_standing_screen.dart';
-import 'stainding/standing_screen.dart';
-import 'sub-screens/top_scorers.dart';
+import '../../standings/cup_standing_screen.dart';
+import '../../standings/standing_screen.dart';
+import '../../top_scorers/top_scorers.dart';
 
 import '../model/competition_model.dart';
 import '../services/competition_service.dart';
